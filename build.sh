@@ -28,3 +28,11 @@ $CLANG --target=riscv64 -march=rv64imc_zba_zbb_zbc_zbs \
   -Ldeps/builtins/build -lcompiler-rt \
   malloc_test.c -o malloc_test_ckb \
   -fdata-sections -ffunction-sections -Wl,--gc-sections
+
+$CLANG --target=riscv64 -march=rv64imc_zba_zbb_zbc_zbs \
+  -g -O3 \
+  -nostdinc --sysroot deps/musl/release -isystem deps/musl/release/include -Ldeps/musl/release/lib \
+  -Ldeps/builtins/build -lcompiler-rt \
+  double_test.c -o double_test_ckb \
+  -I deps/ckb \
+  -fdata-sections -ffunction-sections -Wl,--gc-sections
