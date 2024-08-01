@@ -10,7 +10,7 @@ if ! [ -d deps/musl/release ]; then
   cd ../..
 fi
 
-if ! [ -d deps/builtins/build ]; then
+if ! [ -f deps/builtins/build/libcompiler-rt.a ]; then
   cd deps/builtins
   make CC=$CLANG \
     LD=${CLANG/clang/ld.lld} \
