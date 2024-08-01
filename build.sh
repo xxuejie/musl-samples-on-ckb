@@ -2,18 +2,29 @@
 set -ex
 
 CLANG="${CLANG:-clang-18}"
+CLANGXX="${CLANG/clang/clang++}"
 
-cd deps/musl
-CLANG=$CLANG ./ckb/build.sh
-cd ../..
+if ! [ -d deps/musl/release ]; then
+  cd deps/musl
+  CLANG=$CLANG ./ckb/build.sh
+  cd ../..
+fi
 
-cd deps/builtins
-make CC=$CLANG \
-  LD=${CLANG/clang/ld.lld} \
-  OBJCOPY=${CLANG/clang/llvm-objcopy} \
-  AR=${CLANG/clang/llvm-ar} \
-  RANLIB=${CLANG/clang/llvm-ranlib}
-cd ../..
+if ! [ -d deps/builtins/build ]; then
+  cd deps/builtins
+  make CC=$CLANG \
+    LD=${CLANG/clang/ld.lld} \
+    OBJCOPY=${CLANG/clang/llvm-objcopy} \
+    AR=${CLANG/clang/llvm-ar} \
+    RANLIB=${CLANG/clang/llvm-ranlib}
+  cd ../..
+fi
+
+if ! [ -d deps/libcxx/release ]; then
+  cd deps/libcxx
+  CLANG=$CLANG ./build.sh
+  cd ../..
+fi
 
 $CLANG --target=riscv64 -march=rv64imc_zba_zbb_zbc_zbs \
   -g -O3 \
@@ -35,4 +46,16 @@ $CLANG --target=riscv64 -march=rv64imc_zba_zbb_zbc_zbs \
   -Ldeps/builtins/build -lcompiler-rt \
   double_test.c -o double_test_ckb \
   -I deps/ckb \
+  -fdata-sections -ffunction-sections -Wl,--gc-sections
+
+$CLANGXX --target=riscv64 -march=rv64imc_zba_zbb_zbc_zbs \
+  -g -O3 \
+  -D_GNU_SOURCE \
+  -nostdinc --sysroot deps/musl/release \
+  -isystem deps/libcxx/release/include/c++/v1 \
+  -isystem deps/musl/release/include \
+  -Ldeps/libcxx/release/lib \
+  -Ldeps/musl/release/lib \
+  -Ldeps/builtins/build -lcompiler-rt \
+  cpp_cout_test.cpp -o cpp_cout_test_ckb \
   -fdata-sections -ffunction-sections -Wl,--gc-sections
